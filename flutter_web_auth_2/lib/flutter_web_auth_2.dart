@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -24,8 +23,6 @@ class _OnAppLifecycleResumeObserver extends WidgetsBindingObserver {
 }
 
 class FlutterWebAuth2 {
-  static final RegExp _schemeRegExp = RegExp(r'^[a-z][a-z0-9+.-]*$');
-
   static FlutterWebAuth2Platform get _platform =>
       FlutterWebAuth2Platform.instance;
 
@@ -59,14 +56,6 @@ class FlutterWebAuth2 {
       redirectOriginOverride == null || kDebugMode,
       'Do not use redirectOriginOverride in production',
     );
-
-    if (!Platform.isWindows && !_schemeRegExp.hasMatch(callbackUrlScheme)) {
-      throw ArgumentError.value(
-        callbackUrlScheme,
-        'callbackUrlScheme',
-        'must be a valid URL scheme',
-      );
-    }
 
     WidgetsBinding.instance.removeObserver(
       _resumedObserver,

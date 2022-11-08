@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show HttpServer, Platform;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
@@ -90,9 +91,14 @@ class MyAppState extends State<MyApp> {
 
       req.response.headers.add('Content-Type', 'text/html');
 
-      // Windows needs some callback URL on localhost
-      req.response.write(
-        Platform.isWindows
+      late String htmlInput;
+      if (kIsWeb) {
+        htmlInput = html.replaceFirst(
+          'CALLBACK_URL_HERE',
+          'foobar://success?code=1337',
+        );
+      } else {
+        htmlInput = Platform.isWindows
             ? html.replaceFirst(
                 'CALLBACK_URL_HERE',
                 'http://localhost:43824/success?code=1337',
@@ -100,7 +106,12 @@ class MyAppState extends State<MyApp> {
             : html.replaceFirst(
                 'CALLBACK_URL_HERE',
                 'foobar://success?code=1337',
-              ),
+              );
+      }
+
+      // Windows needs some callback URL on localhost
+      req.response.write(
+        htmlInput,
       );
 
       await req.response.close();
@@ -109,14 +120,20 @@ class MyAppState extends State<MyApp> {
 
   Future<void> authenticate() async {
     const url = 'http://127.0.0.1:43823/';
+    const urlSchemeDefault = 'foobar';
+    const urlSchemeWindows = 'http://localhost:43824';
     // Windows needs some callback URL on localhost
-    final callbackUrlScheme =
-        Platform.isWindows ? 'http://localhost:43824' : 'foobar';
+    late String urlScheme;
+    if (kIsWeb) {
+      urlScheme = urlSchemeDefault;
+    } else {
+      urlScheme = Platform.isWindows ? urlSchemeWindows : urlSchemeDefault;
+    }
 
     try {
       final result = await FlutterWebAuth2.authenticate(
         url: url,
-        callbackUrlScheme: callbackUrlScheme,
+        callbackUrlScheme: urlScheme,
         // If needed: preferEphemeral: true,
       );
       setState(() {
