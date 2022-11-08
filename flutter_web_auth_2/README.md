@@ -268,3 +268,9 @@ This seems to be a bug in `ASWebAuthenticationSession`, and no work around have 
 ### Error on macOS if Chrome is default browser
 
 This seems to be a bug in `ASWebAuthenticationSession`, and no work around have been found. Please see issue [#136](https://github.com/LinusU/flutter_web_auth/issues/136) for more info.
+
+## Known-Issues
+
+### Example app for web
+
+The redirect does not work on Web inside the example app, as it is not allow to bind a web server.
