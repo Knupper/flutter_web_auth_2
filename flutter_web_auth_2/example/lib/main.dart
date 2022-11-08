@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show HttpServer, Platform;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
@@ -62,6 +63,8 @@ const html = '''
 </html>
 ''';
 
+/// On web you need to run the example app with argument `--web-port 43824`
+/// to match the port of the example app
 void main() => runApp(const MyApp());
 
 class MyApp extends StatefulWidget {
@@ -90,9 +93,15 @@ class MyAppState extends State<MyApp> {
 
       req.response.headers.add('Content-Type', 'text/html');
 
-      // Windows needs some callback URL on localhost
-      req.response.write(
-        Platform.isWindows
+      late String replacedCallbackUrl;
+
+      if (kIsWeb) {
+        replacedCallbackUrl = html.replaceFirst(
+          'CALLBACK_URL_HERE',
+          'http://localhost:43824/success?code=1337',
+        );
+      } else {
+        replacedCallbackUrl = Platform.isWindows
             ? html.replaceFirst(
                 'CALLBACK_URL_HERE',
                 'http://localhost:43824/success?code=1337',
@@ -100,8 +109,10 @@ class MyAppState extends State<MyApp> {
             : html.replaceFirst(
                 'CALLBACK_URL_HERE',
                 'foobar://success?code=1337',
-              ),
-      );
+              );
+      }
+      // Windows needs some callback URL on localhost
+      req.response.write(replacedCallbackUrl);
 
       await req.response.close();
     });
@@ -109,9 +120,15 @@ class MyAppState extends State<MyApp> {
 
   Future<void> authenticate() async {
     const url = 'http://127.0.0.1:43823/';
+
     // Windows needs some callback URL on localhost
-    final callbackUrlScheme =
-        Platform.isWindows ? 'http://localhost:43824' : 'foobar';
+    late String callbackUrlScheme;
+
+    if (kIsWeb) {
+      callbackUrlScheme = 'http://localhost:43824';
+    } else {
+      callbackUrlScheme = Platform.isWindows ? 'http://localhost:43824' : 'foobar';
+    }
 
     try {
       final result = await FlutterWebAuth2.authenticate(
